@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../data/mock_grocery_repository.dart';
 import '../../models/grocery.dart';
+import '../../ui/groceries/tabs/grocery_search.dart';
+import '../../ui/groceries/tabs/grocery_store.dart';
 import 'grocery_form.dart';
 
 class GroceryList extends StatefulWidget {
@@ -11,6 +13,7 @@ class GroceryList extends StatefulWidget {
 }
 
 class _GroceryListState extends State<GroceryList> {
+  int _currentIndex = 0;
 
   void onCreate() async {
     // Navigate to the form screen using the Navigator push
@@ -27,38 +30,42 @@ class _GroceryListState extends State<GroceryList> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = const Center(child: Text('No items added yet.'));
-
-    if (dummyGroceryItems.isNotEmpty) {
-      //  Display groceries with an Item builder and  LIst Tile
-      content = ListView.builder(
-        itemCount: dummyGroceryItems.length,
-        itemBuilder: (context, index) =>
-            GroceryTile(grocery: dummyGroceryItems[index]),
-      );
-    }
+    final tabs = [
+      GroceryStoreTab(
+        groceries: dummyGroceryItems,
+        onAdd: onCreate,
+      ),
+      GrocerySearchTab(
+        groceries: dummyGroceryItems,
+      ),
+    ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Groceries'),
-        actions: [IconButton(onPressed: onCreate, icon: const Icon(Icons.add))],
+        title: Text(
+          _currentIndex == 0 ? 'Your Groceries' : 'Search Groceries',
+        ),
+        actions: _currentIndex == 0
+            ? [IconButton(onPressed: onCreate, icon: const Icon(Icons.add))]
+            : null,
       ),
-      body: content,
-    );
-  }
-}
-
-class GroceryTile extends StatelessWidget {
-  const GroceryTile({super.key, required this.grocery});
-
-  final Grocery grocery;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(width: 15, height: 15, color: grocery.category.color),
-      title: Text(grocery.name),
-      trailing: Text(grocery.quantity.toString()),
+      body: IndexedStack(index: _currentIndex, children: tabs),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (value) => setState(() {
+          _currentIndex = value;
+        }),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.local_grocery_store),
+            label: 'Groceries',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+        ],
+      ),
     );
   }
 }
